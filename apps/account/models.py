@@ -15,7 +15,7 @@ class UserManager(BaseUserManager):
         if not kwargs.get('is_superuser'):
             user.create_activation_code()
 
-        # user.set_password(password)
+        user.set_password(password)
         user.save()
         return user
 
