@@ -32,7 +32,7 @@ class ProductViewSet(ModelViewSet):
     def get_permissions(self):
         if self.request.method in ('PUT', 'PATCH', 'DELETE', 'POST'):
             return IsAdminOrEmployee(),
-        return IsActive(),
+        return permissions.AllowAny(),
 
     @action(['POST', 'DELETE', 'GET'], detail=True)
     def favorites(self, request, pk):
