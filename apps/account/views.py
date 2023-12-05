@@ -118,11 +118,10 @@ class SendEmailView(APIView):
     permission_classes = IsActive,
 
     def post(self, request):
-        user = request.user
-        try:
-            reset_password_email.delay(user)
-        except:
-            return Response('Something wrong', status=400)
+        instance = User.objects.get(email=self.request.user)
+        serializer = AccountSerializer(instance)
+        user = serializer.data.get('email')
+        reset_password_email.delay(user)
 
         return Response('Successfully send', status=200)
 
