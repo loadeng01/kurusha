@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .tasks import send_confirmation_email, reset_password_email
-from .permissions import IsAdminOrEmployee, IsActive
+from .permissions import IsActive
 from django.shortcuts import render
 
 User = get_user_model()

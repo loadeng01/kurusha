@@ -2,7 +2,7 @@ from rest_framework.decorators import action
 from rest_framework import permissions, generics
 from .models import Product
 from .serializers import ProductSerializer
-from apps.account.permissions import IsAdminOrEmployee, IsActive
+from apps.account.permissions import IsAdmin, IsActive
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +17,7 @@ User = get_user_model()
 
 
 class Pagination(PageNumberPagination):
-    page_size = 4
+    page_size = 8
     page_query_param = 'page'
 
 
@@ -31,7 +31,7 @@ class ProductViewSet(ModelViewSet):
 
     def get_permissions(self):
         if self.request.method in ('PUT', 'PATCH', 'DELETE', 'POST'):
-            return IsAdminOrEmployee(),
+            return IsAdmin(),
             # return permissions.AllowAny(),
         return permissions.AllowAny(),
 
