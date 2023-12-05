@@ -31,7 +31,8 @@ class ProductViewSet(ModelViewSet):
 
     def get_permissions(self):
         if self.request.method in ('PUT', 'PATCH', 'DELETE', 'POST'):
-            return IsAdminOrEmployee(),
+            # return IsAdminOrEmployee(),
+            return permissions.AllowAny(),
         return permissions.AllowAny(),
 
     @action(['POST', 'DELETE', 'GET'], detail=True)
