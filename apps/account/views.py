@@ -1,17 +1,14 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 from rest_framework import permissions
 from .serializers import *
-from rest_framework import generics
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .tasks import send_confirmation_email
-from .permissions import IsAdminOrEmployee
-from rest_framework.filters import SearchFilter
-from django_filters.rest_framework import DjangoFilterBackend
+from .tasks import send_confirmation_email, reset_password_email
+from .permissions import IsAdminOrEmployee, IsActive
+from django.shortcuts import render
 
 User = get_user_model()
 
@@ -51,12 +48,12 @@ class RegisterCourierView(APIView):
 class ActivationEmailView(APIView):
     def get(self, request):
         code = request.GET.get('u')
-        print(code)
         user = get_object_or_404(User, activation_code=code)
         user.is_active = True
         user.activation_code = ''
         user.save()
-        return Response('Successfully activate', status=200)
+        return render(request, 'whistle.html')
+        # return Response('Successfully activate', status=200)
 
 
 class LoginView(TokenObtainPairView):
@@ -68,19 +65,9 @@ class Pagination(PageNumberPagination):
     page_query_param = 'page'
 
 
-# class UsersViewSet(generics.ListAPIView):
-#     permission_classes = permissions.IsAdminUser,
-#     queryset = User.objects.all()
-#     pagination_class = Pagination
-#     serializer_class = UserSerializer
-#     filter_backends = (SearchFilter, DjangoFilterBackend)
-#     search_fields = ('email', 'username')
-#     filterset_fields = ('is_staff', 'is_superuser', 'is_active')
-
-
 class UserView(APIView):
     serializer_class = AccountSerializer
-    permission_classes = permissions.IsAuthenticated,
+    permission_classes = IsActive,
 
     def get_queryset(self):
         return User.objects.get(email=self.request.user)
@@ -112,5 +99,34 @@ class UserView(APIView):
         instance = User.objects.get(email=self.request.user)
         instance.delete()
         return Response(status=204)
+
+
+class ResetPasswordView(APIView):
+    permission_classes = IsActive,
+
+    def patch(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = User.objects.get(email=self.request.user)
+        serializer = ResetPasswordSerializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response('Successfully changed', status=200)
+
+
+class SendEmailView(APIView):
+    permission_classes = IsActive,
+
+    def post(self, request):
+        user = request.user
+        try:
+            reset_password_email.delay(user)
+        except:
+            return Response('Something wrong', status=400)
+
+        return Response('Successfully send', status=200)
+
+
+
 
 

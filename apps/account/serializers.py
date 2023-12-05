@@ -60,6 +60,25 @@ class RegisterCourierSerializer(serializers.ModelSerializer):
         return user
 
 
+class ResetPasswordSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(min_length=5, max_length=20, required=True, write_only=True)
+    password_confirm = serializers.CharField(min_length=5, max_length=20, required=True, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('password', 'password_confirm')
+
+    def validate(self, attrs):
+        password_confirm = attrs.pop('password_confirm')
+        password = attrs['password']
+        if password != password_confirm:
+            raise serializers.ValidationError('Password mismatch')
+        if password.isdigit() or password.isalpha():
+            raise serializers.ValidationError('Wrong password')
+
+        return attrs
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -84,14 +103,20 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         repr = super().to_representation(instance)
-        dots = '*' * len(repr['password'])
         data = {
             'first_name': f"{repr['first_name']}",
             'last_name': f"{repr['last_name']}",
             'email': repr['email'],
             'phone_number': repr['phone_number'],
-            'password': dots
         }
         return data
+
+
+class EmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("email", )
+
+
 
 

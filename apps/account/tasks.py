@@ -6,7 +6,6 @@ from config.celery import app
 
 @app.task()
 def send_confirmation_email(email, code):
-    # activation_url = f'http://localhost:8000/api/account/activate/?u={code}'
     activation_url = f'http://16.170.221.153/api/account/activate/?u={code}'
 
     message = format_html(
@@ -20,6 +19,29 @@ def send_confirmation_email(email, code):
 
     send_mail(
         'Hello, activate your account!',
+        '',
+        'checkemail@gmail.com',
+        [email],
+        fail_silently=False,
+        html_message=message
+    )
+
+
+@app.task()
+def reset_password_email(email):
+    url = 'http://16.170.221.153/api/your_account/change_password/'
+
+    message = format_html(
+        '<h2>Hello, reset your password!</h2>\n'
+        'Click on the word to change'
+        "<br><a href={}>{}</a></br>"
+        "<p>Don't show it anyone</p>",
+        url,
+        'CHANGE'
+    )
+
+    send_mail(
+        'Reset Password!',
         '',
         'checkemail@gmail.com',
         [email],
