@@ -12,7 +12,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
-    user = serializers.CharField(source='user.full_name')
+    user = serializers.ReadOnlyField(source='user.full_name')
+    user_phone = serializers.ReadOnlyField(source='user.phone_number')
     products = OrderItemSerializer(write_only=True, many=True)
 
     class Meta:
@@ -42,8 +43,6 @@ class OrderSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         repr = super().to_representation(instance)
         repr['product'] = OrderItemSerializer(instance.items.all(), many=True).data
-        print(repr['user'], '1111111111111111111')
-        # repr['user_phone_number'] = self.user.phone_number
         return repr
 
 
