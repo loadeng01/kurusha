@@ -29,7 +29,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/favorite_products/', UserFavoritesListView.as_view()),
     path('api/favorite_products/<int:id>/', UserFavoritesDetailView.as_view()),
-
+    path('api/order/', include('apps.order.urls'))
 ]
 
 urlpatterns += static(

@@ -104,19 +104,12 @@ class AccountSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         repr = super().to_representation(instance)
         data = {
+            'name': repr['full_name'],
             'first_name': f"{repr['first_name']}",
             'last_name': f"{repr['last_name']}",
             'email': repr['email'],
             'phone_number': repr['phone_number'],
         }
         return data
-
-
-class EmailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("email", )
-
-
 
 

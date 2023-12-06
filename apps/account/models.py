@@ -16,6 +16,7 @@ class UserManager(BaseUserManager):
             user.create_activation_code()
 
         user.set_password(password)
+        user.create_full_name()
         user.save()
         return user
 
@@ -36,6 +37,7 @@ class UserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    full_name = models.CharField(max_length=150, blank=True, null=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=220)
     phone_number = models.CharField(max_length=25, blank=True, null=True, unique=True)
@@ -54,6 +56,10 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    def create_full_name(self):
+        full_name = f'{self.first_name} {self.last_name}'
+        self.full_name = full_name
 
     def create_activation_code(self):
         import uuid

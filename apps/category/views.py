@@ -11,7 +11,7 @@ class CategoryViewSet(ModelViewSet):
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
-            return IsActive(),
+            return permissions.AllowAny(),
         return IsAdmin(),
 
     
