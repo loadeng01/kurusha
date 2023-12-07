@@ -12,8 +12,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
-    user = serializers.ReadOnlyField(source='user.full_name')
-    user_phone = serializers.ReadOnlyField(source='user.phone_number')
+    user = serializers.ReadOnlyField(source='user.email')
     products = OrderItemSerializer(write_only=True, many=True)
 
     class Meta:
@@ -30,7 +29,7 @@ class OrderSerializer(serializers.ModelSerializer):
             except:
                 total_sum += product['product'].price
 
-        order = Order.objects.create(status='in_process', total_sum=total_sum, **validated_data)
+        order = Order.objects.create(total_sum=total_sum, **validated_data)
 
         for product in products:
             try:
@@ -43,7 +42,12 @@ class OrderSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         repr = super().to_representation(instance)
         repr['product'] = OrderItemSerializer(instance.items.all(), many=True).data
+        repr['user_phone_number'] = instance.user.phone_number
+        full_name = f'{instance.user.first_name} {instance.user.last_name}'
+        repr['user'] = full_name
         return repr
+
+
 
 
 

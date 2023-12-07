@@ -19,20 +19,12 @@ class OrderCreateApiView(APIView):
         serializer = OrderSerializer(data=order)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
         return Response(serializer.data, status=201)
 
     def perform_create(self, serializer):
         user = self.request.user
         serializer.save(user=user)
-
-
-class OrderConfirmView(APIView):
-    def get(self, request, pk):
-        order = Order.objects.get(pk=pk)
-        order.status = 'completed'
-        order.save()
-        return Response({'message': 'Вы подтвердили'}, status=200)
-
 
 
 

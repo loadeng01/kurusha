@@ -37,7 +37,6 @@ class UserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    full_name = models.CharField(max_length=150, blank=True, null=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=220)
     phone_number = models.CharField(max_length=25, blank=True, null=True, unique=True)
