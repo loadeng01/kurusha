@@ -29,7 +29,7 @@ class OrderSerializer(serializers.ModelSerializer):
             except:
                 total_sum += product['product'].price
 
-        order = Order.objects.create(total_sum=total_sum, **validated_data)
+        order = Order.objects.create(status='in_process', total_sum=total_sum, **validated_data)
 
         for product in products:
             try:

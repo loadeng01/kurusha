@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .tasks import send_confirmation_email, reset_password_email
 from .permissions import IsActive
 from django.shortcuts import render
+from django.contrib.auth.hashers import check_password
 
 User = get_user_model()
 
@@ -97,19 +98,50 @@ class UserView(APIView):
 
     def delete(self, request, *args, **kwargs):
         instance = User.objects.get(email=self.request.user)
+        # user_instance = self.request.user
+        # old_password = request.data.get('password')
+        #
+        # if not check_password(old_password, user_instance.password):
+        #     return Response('Неверный пароль', status=400)
+
         instance.delete()
-        return Response(status=204)
+        return Response('Successfully deleted', status=204)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = IsActive,
+
+    def post(self, request, *args, **kwargs):
+        user_instance = self.request.user
+        old_password = request.data.get('password')
+        new_password = request.data.get('new_password')
+        password_confirm = request.data.get('password_confirm')
+
+        if not check_password(old_password, user_instance.password):
+            return Response('Старый пароль неверный', status=400)
+
+        if new_password != password_confirm:
+            return Response('Новые пароли не совпадают', status=400)
+
+        user_instance.set_password(new_password)
+        user_instance.save()
+
+        return Response('Successfully changed', status=200)
 
 
 class ResetPasswordView(APIView):
     permission_classes = IsActive,
 
-    def patch(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', True)
-        instance = User.objects.get(email=self.request.user)
-        serializer = ResetPasswordSerializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+    def post(self, request, *args, **kwargs):
+        user_instance = self.request.user
+        password = request.data.get('password')
+        password_confirm = request.data.get('password_confirm')
+
+        if password != password_confirm:
+            return Response('Новые пароли не совпадают', status=400)
+
+        user_instance.set_password(password)
+        user_instance.save()
 
         return Response('Successfully changed', status=200)
 
