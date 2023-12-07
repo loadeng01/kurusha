@@ -27,4 +27,10 @@ class OrderCreateApiView(APIView):
         serializer.save(user=user)
 
 
+class GetInProcessOrderView(APIView):
+    def get(self, request):
+        queryset = Order.objects.filter(status='in_process')
+        serializer = OrderSerializer(queryset, many=True)
+        return Response(serializer.data, status=200)
+
 

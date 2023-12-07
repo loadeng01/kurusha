@@ -7,7 +7,6 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from django.conf.urls.static import static
 from django.conf import settings
-from apps.order.views import OrderCreateApiView
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -29,7 +28,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/favorite_products/', UserFavoritesListView.as_view()),
     path('api/favorite_products/<int:id>/', UserFavoritesDetailView.as_view()),
-    path('api/order/', OrderCreateApiView.as_view())
+    path('api/order/', include('apps.order.urls'))
 ]
 
 urlpatterns += static(
