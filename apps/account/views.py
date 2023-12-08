@@ -98,11 +98,11 @@ class UserView(APIView):
 
     def delete(self, request, *args, **kwargs):
         instance = User.objects.get(email=self.request.user)
-        # user_instance = self.request.user
-        # old_password = request.data.get('password')
-        #
-        # if not check_password(old_password, user_instance.password):
-        #     return Response('Неверный пароль', status=400)
+        user_instance = self.request.user
+        old_password = request.data.get('password')
+
+        if not check_password(old_password, user_instance.password):
+            return Response('Неверный пароль', status=400)
 
         instance.delete()
         return Response('Successfully deleted', status=204)
