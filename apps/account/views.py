@@ -89,6 +89,10 @@ class UserView(APIView):
 
     def patch(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)
+
+        if request.data.get('email'):
+            return Response('Нельзя менять Email', status=400)
+
         instance = User.objects.get(email=self.request.user)
         serializer = self.serializer_class(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
