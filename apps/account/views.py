@@ -101,9 +101,9 @@ class UserView(APIView):
         return Response(serializer.data, status=200)
 
     def delete(self, request, *args, **kwargs):
+        user_instance = self.request.user
+        instance = User.objects.get(email=user_instance)
         try:
-            user_instance = self.request.user
-            instance = User.objects.get(email=user_instance)
             old_password = request.data.get('password')
         except:
             return Response('error', status=400)
