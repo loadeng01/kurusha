@@ -51,7 +51,7 @@ class ProductViewSet(ModelViewSet):
             favorites_users = User.objects.filter(id__in=users)
             serializer = UserSerializer(favorites_users, many=True)
             count = len(serializer.data)
-            return Response({'count': count}, status=200)
+            return Response({"count": count}, status=200)
 
         else:
             favorite = user.favorites.filter(product=product)

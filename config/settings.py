@@ -16,7 +16,7 @@ SECRET_KEY = 'django-insecure-l86x&c85po6n=(p+-5m5k$sk2zpgysz)&snmxhm)sgo8er%t_$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['16.170.221.153', 'localhost']
+ALLOWED_HOSTS = ['16.170.221.153', 'localhost', 'cms-up.ru']
 
 
 # Application definition
@@ -53,15 +53,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://cms-up.ru',
+    "https://cms-up.ru",
 ]
 
-
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    'http://cms-up.ru',
+    'https://cms-up.ru',
 ]
 
 ROOT_URLCONF = 'config.urls'
