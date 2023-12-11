@@ -89,6 +89,10 @@ class UserView(APIView):
 
     def patch(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)
+
+        if request.data.get('email'):
+            return Response('Нельзя менять Email', status=400)
+
         instance = User.objects.get(email=self.request.user)
         serializer = self.serializer_class(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -97,9 +101,12 @@ class UserView(APIView):
         return Response(serializer.data, status=200)
 
     def delete(self, request, *args, **kwargs):
-        instance = User.objects.get(email=self.request.user)
-        # user_instance = self.request.user
-        # old_password = request.data.get('password')
+        user_instance = self.request.user
+        instance = User.objects.get(email=user_instance)
+        # try:
+        #     old_password = request.data.get('password')
+        # except:
+        #     return Response('error', status=400)
         #
         # if not check_password(old_password, user_instance.password):
         #     return Response('Неверный пароль', status=400)
