@@ -1,12 +1,41 @@
 import requests
 import telebot
 from decouple import config
+from django.http import Http404
+from django.shortcuts import get_object_or_404
+
+from apps.order.models import Order
 from apps.tg.models import update_feedback
 from telebot import types
 
-
 TOKEN = config('TOKEN')
 bot = telebot.TeleBot(TOKEN)
+yandex_token = config('YANDEX_TOKEN')
+
+
+def geocode(place_name):
+    api_key = yandex_token
+    base_url = "https://geocode-maps.yandex.ru/1.x/"
+
+    params = {
+        'apikey': api_key,
+        'format': 'json',
+        'geocode': place_name,
+    }
+
+    try:
+        response = requests.get(base_url, params=params)
+        data = response.json()
+
+        if data['response']['GeoObjectCollection']['metaDataProperty']['GeocoderResponseMetaData']['found'] > 0:
+            # Получаем координаты первого результата
+            coordinates = data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']
+            return tuple(map(float, coordinates.split()))
+        else:
+            return None
+    except Exception as e:
+        print(f"Ошибка при выполнении запроса к Яндекс.Геокодеру: {e}")
+        return None
 
 
 @bot.message_handler(commands=['start'])
@@ -68,20 +97,26 @@ def handle_feedback(message):
     bot.reply_to(message, "Спасибо за ваш отзыв! Ваше мнение очень важно для нас.")
 
 
+global orders
+global order_list
+
+
 @bot.message_handler(commands=['orders'])
 def message_send(message):
     api_url = 'http://16.170.221.153/api/order/orders/'
     response = requests.get(api_url)
-    global order_list
-    order_list = []
     if response.status_code == 200:
+
         orders = response.json()
         if orders:
+            order_list = []
             for order in orders:
                 order_list.append([order['user'], order['address']])
                 formatted_order = f'Пользователь: {order_list[-1][0]}, Адрес: {order_list[-1][1]}'
                 markup = types.InlineKeyboardMarkup(row_width=1)
-                button = types.InlineKeyboardButton("ВЗЯТЬ", callback_data=f'take_order_{order["id"]}')
+                button_data = f'order_{order["id"]}'
+                print(f"Button Data: {button_data}")
+                button = types.InlineKeyboardButton("take", callback_data=f'{order["id"]}')
                 markup.add(button)
                 bot.send_message(message.chat.id, f'Активные заказы:\n{formatted_order}', reply_markup=markup)
         else:
@@ -90,26 +125,43 @@ def message_send(message):
         bot.send_message(message.chat.id, 'Ошибка при получении заказов. Попробуйте позже.')
 
 
-@bot.callback_query_handler(func=lambda callback: callback.data.startswith('take_order_'))
-def take_order_callback(callback):
-    order_id = callback.data.split('_')[2]
-    order_taken_message = f'Заказ {order_id} взят!'
-    bot.send_message(callback.message.chat.id, order_taken_message)
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback_query(call):
+    try:
+        order_id = call.data
+        queryset = Order.objects.get(id=order_id)
+        queryset.status = 'completed'
+        queryset.save()
+        bot.send_message(call.chat.id, f"Заказ {order_id} взят и обновлен!\n")
+        coordinates = get_coordinates_from_place(queryset.address)
+
+        if coordinates:
+            latitude, longitude = coordinates
+
+            # Создаем ссылку на Яндекс.Карты с указанием координат и автоматическим рассчетом маршрута
+            maps_link = f"https://yandex.ru/maps/?rtext={latitude},{longitude}&rtt=auto"
+
+            bot.send_message(call.chat.id, f"Координаты для адреса '{queryset.address}': ({latitude}, {longitude})\n"
+                                           f"Ссылка на Яндекс.Карты: {maps_link}")
+        else:
+            bot.send_message(call.chat.id, f"Координаты для адреса '{queryset.address}' не найдены.")
+    except Http404:
+        bot.send_message(call.chat.id, f"Заказ {order_id} не найден!\n")
+    except Exception as e:
+        print(f"Ошибка при обработке колбэка: {e}")
 
 
-# try:
-    #     order_id = callback.data.split('_')[1]
-    #     order_info = find_order_info_by_id(order_id)
-    #     if order_info:
-    #         bot.send_message(callback.message.chat.id, f"Заказ {order_id} взят!\n{order_info}")
-    #     else:
-    #         bot.send_message(callback.message.chat.id, "Ошибка: заказ не найден.")
-    # except Exception as e:
-    #     print(f"Ошибка при обработке колбэка: {e}")
+def get_coordinates_from_place(place_name):
+    try:
+        coordinates = geocode(place_name)
 
+        if coordinates:
+            latitude, longitude = coordinates
+            print(f"Координаты для места '{place_name}': ({latitude}, {longitude})")
 
-def find_order_info_by_id(order_id):
-    for order_info in order_list:
-        if str(order_id) in order_info:
-            return order_info
-    return None
+        else:
+            return None
+    except Exception as e:
+        print(f"Ошибка при получении координат: {e}")
+        return None
+
