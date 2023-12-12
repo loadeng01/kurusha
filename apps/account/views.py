@@ -6,7 +6,7 @@ from .serializers import *
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .tasks import send_confirmation_email, reset_password_email
+from .tasks import send_confirmation_email, reset_password_email, send_tg_bot
 from .permissions import IsActive
 from django.shortcuts import render
 from django.contrib.auth.hashers import check_password
@@ -39,7 +39,7 @@ class RegisterCourierView(APIView):
         user = serializer.save()
         if user:
             try:
-                send_confirmation_email.delay(user.email, user.activation_code)
+                send_tg_bot.delay(user.email)
             except:
                 return Response({'message': 'Registered, but trouble with email',
                                  'data': serializer.data}, status=201)
@@ -103,14 +103,6 @@ class UserView(APIView):
     def delete(self, request, *args, **kwargs):
         user_instance = self.request.user
         instance = User.objects.get(email=user_instance)
-        # try:
-        #     old_password = request.data.get('password')
-        # except:
-        #     return Response('error', status=400)
-        #
-        # if not check_password(old_password, user_instance.password):
-        #     return Response('Неверный пароль', status=400)
-
         instance.delete()
         return Response('Successfully deleted', status=204)
 
