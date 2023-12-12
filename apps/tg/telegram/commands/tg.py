@@ -117,7 +117,7 @@ def handle_callback_query(call):
 
 
 def geopy(place):
-    location = GoogleV3(api_key='AIzaSyDufjhgiYQjmQ5FPyryZBxVk74AqDha55s', domain="maps.google.ru").geocode(place)
+    location = GoogleV3(api_key=config("API_GOOGLE_KEY"), domain="maps.google.ru").geocode(place)
     return location.latitude, location.longitude
 
 
