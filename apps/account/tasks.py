@@ -49,3 +49,27 @@ def reset_password_email(email):
         html_message=message
     )
 
+
+@app.task()
+def send_tg_bot(email):
+    url = 'https://t.me/test123esf_bot'
+
+    message = format_html(
+        '<h2>Привет, добро пожаловать в нашу команду</h2>\n'
+        'Вот ссылка на телеграм бота с которым ты будешь работать'
+        "<br><a href={}>{}</a></br>"
+        "<p>Don't show it anyone</p>",
+        url,
+        'БОТ'
+    )
+
+    send_mail(
+        'Добро пожаловать в команду',
+        '',
+        'checkemail@gmail.com',
+        [email],
+        fail_silently=False,
+        html_message=message
+    )
+
+

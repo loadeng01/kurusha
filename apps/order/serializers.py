@@ -19,6 +19,12 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = '__all__'
 
+    def validate(self, attrs):
+        address = attrs['address']
+        if 'Бишкек' not in address:
+            attrs['address'] = f'{address}, Бишкек'
+        return attrs
+
     def create(self, validated_data):
         products = validated_data.pop('products')
         total_sum = 0
