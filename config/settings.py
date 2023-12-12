@@ -16,7 +16,7 @@ SECRET_KEY = 'django-insecure-l86x&c85po6n=(p+-5m5k$sk2zpgysz)&snmxhm)sgo8er%t_$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['16.170.221.153', 'localhost', 'cms-up.ru']
+ALLOWED_HOSTS = ['16.170.221.153', 'localhost', 'cms-up.ru', '127.0.0.1:8000']
 
 
 # Application definition
@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
 
+
     # apps
     'apps.account',
     'apps.category',
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'apps.favorite',
     'apps.order',
     'apps.tg',
+
 
 ]
 

@@ -3,40 +3,13 @@ import telebot
 from decouple import config
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-
+from geopy import GoogleV3
 from apps.order.models import Order
 from apps.tg.models import update_feedback
 from telebot import types
 
 TOKEN = config('TOKEN')
 bot = telebot.TeleBot(TOKEN)
-yandex_token = config('YANDEX_TOKEN')
-
-
-def geocode(place_name):
-    api_key = yandex_token
-    base_url = "https://geocode-maps.yandex.ru/1.x/"
-
-    params = {
-        'apikey': api_key,
-        'format': 'json',
-        'geocode': place_name,
-    }
-
-    try:
-        response = requests.get(base_url, params=params)
-        data = response.json()
-
-        if data['response']['GeoObjectCollection']['metaDataProperty']['GeocoderResponseMetaData']['found'] > 0:
-            # Получаем координаты первого результата
-            coordinates = data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']
-            return tuple(map(float, coordinates.split()))
-        else:
-            return None
-    except Exception as e:
-        print(f"Ошибка при выполнении запроса к Яндекс.Геокодеру: {e}")
-        return None
-
 
 @bot.message_handler(commands=['start'])
 def message_send(message):
@@ -132,36 +105,22 @@ def handle_callback_query(call):
         queryset = Order.objects.get(id=order_id)
         queryset.status = 'completed'
         queryset.save()
-        bot.send_message(call.chat.id, f"Заказ {order_id} взят и обновлен!\n")
-        coordinates = get_coordinates_from_place(queryset.address)
+        bot.send_message(call.message.chat.id, f"Заказ {order_id} взят и обновлен!\n")
+        coordinates = geopy(queryset.address)
+        latitude, longitude = coordinates
+        maps_link = generate_google_maps_link(latitude, longitude)
+        bot.send_message(call.message.chat.id, f"Ссылка на Google Maps: {maps_link}")
+        bot.send_message(call.message.chat.id, f"Связь с покупателем: {queryset.user}")
 
-        if coordinates:
-            latitude, longitude = coordinates
-
-            # Создаем ссылку на Яндекс.Карты с указанием координат и автоматическим рассчетом маршрута
-            maps_link = f"https://yandex.ru/maps/?rtext={latitude},{longitude}&rtt=auto"
-
-            bot.send_message(call.chat.id, f"Координаты для адреса '{queryset.address}': ({latitude}, {longitude})\n"
-                                           f"Ссылка на Яндекс.Карты: {maps_link}")
-        else:
-            bot.send_message(call.chat.id, f"Координаты для адреса '{queryset.address}' не найдены.")
     except Http404:
-        bot.send_message(call.chat.id, f"Заказ {order_id} не найден!\n")
-    except Exception as e:
-        print(f"Ошибка при обработке колбэка: {e}")
+        bot.send_message(call.message.chat.id, f"Заказ {order_id} не найден!\n")
 
 
-def get_coordinates_from_place(place_name):
-    try:
-        coordinates = geocode(place_name)
+def geopy(place):
+    location = GoogleV3(api_key='AIzaSyDufjhgiYQjmQ5FPyryZBxVk74AqDha55s', domain="maps.google.ru").geocode(place)
+    return location.latitude, location.longitude
 
-        if coordinates:
-            latitude, longitude = coordinates
-            print(f"Координаты для места '{place_name}': ({latitude}, {longitude})")
 
-        else:
-            return None
-    except Exception as e:
-        print(f"Ошибка при получении координат: {e}")
-        return None
-
+def generate_google_maps_link(latitude, longitude):
+    google_maps_link = f"https://www.google.com/maps/search/?api=1&query={latitude},{longitude}"
+    return google_maps_link
