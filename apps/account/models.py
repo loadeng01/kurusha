@@ -12,7 +12,7 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email=email)
         user = self.model(email=email, **kwargs)
 
-        if not kwargs.get('is_superuser'):
+        if not kwargs.get('is_superuser') or not kwargs.get('is_staff'):
             user.create_activation_code()
 
         user.set_password(password)
@@ -25,6 +25,7 @@ class UserManager(BaseUserManager):
 
     def create_courier(self, email, password, **kwargs):
         kwargs.setdefault('is_staff', True)
+        kwargs.setdefault('is_active', True)
         return self._create_user(email, password, **kwargs)
 
     def create_superuser(self, email, password, **kwargs):
