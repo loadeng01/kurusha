@@ -53,8 +53,8 @@ class ActivationEmailView(APIView):
         user.is_active = True
         user.activation_code = ''
         user.save()
-        return render(request, 'whistle.html')
-        # return Response('Successfully activate', status=200)
+        # return render(request, 'whistle.html')
+        return Response('Successfully activate', status=200)
 
 
 class LoginView(TokenObtainPairView):
