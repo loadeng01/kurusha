@@ -11,6 +11,7 @@ from telebot import types
 TOKEN = config('TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
+info_list = {}
 @bot.message_handler(commands=['start'])
 def message_send(message):
     bot.reply_to(message, "Добро пожаловать в нашу курьерскую службу доставки! 🚚💨 Ниже будет ссылка на группу,"
@@ -70,20 +71,23 @@ def handle_feedback(message):
     bot.reply_to(message, "Спасибо за ваш отзыв! Ваше мнение очень важно для нас.")
 
 
-global orders
-global order_list
 
 
 @bot.message_handler(commands=['orders'])
-def message_send(message):
+def message_send_gg(message):
     api_url = 'http://16.170.221.153/api/order/orders/'
     response = requests.get(api_url)
+    global info_list
     if response.status_code == 200:
 
         orders = response.json()
+
         if orders:
             order_list = []
+            info_list = {}
             for order in orders:
+                info_list = {order['id']: [order['user'], order['total_sum'], order['comment'], order['product'],
+                                           order['user_phone_number']]}
                 order_list.append([order['user'], order['address']])
                 formatted_order = f'Пользователь: {order_list[-1][0]}, Адрес: {order_list[-1][1]}'
                 markup = types.InlineKeyboardMarkup(row_width=1)
@@ -109,8 +113,9 @@ def handle_callback_query(call):
         coordinates = geopy(queryset.address)
         latitude, longitude = coordinates
         maps_link = generate_google_maps_link(latitude, longitude)
+
         bot.send_message(call.message.chat.id, f"Ссылка на Google Maps: {maps_link}")
-        bot.send_message(call.message.chat.id, f"Связь с покупателем: {queryset.user}")
+        bot.send_message(call.message.chat.id, f'Полная информация о заказе: {info_list[order_id]}')
 
     except Http404:
         bot.send_message(call.message.chat.id, f"Заказ {order_id} не найден!\n")

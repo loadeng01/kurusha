@@ -54,7 +54,7 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.email
+        return f'{self.phone_number}'
 
     def create_full_name(self):
         full_name = f'{self.first_name} {self.last_name}'

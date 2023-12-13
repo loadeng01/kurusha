@@ -30,6 +30,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.id} --> {self.user}'
+        return f'ID: {self.id}, Пользователь: {self.user}, Адрес: {self.address}, Сумма: {self.total_sum}'
+
 
 
